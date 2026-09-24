@@ -1,0 +1,6 @@
+# clasp project binding: each deployer creates their own with `clasp create`
+.clasp.json
+# local-only helpers (e.g. demo recipients), never committed
+*.local.js
+.DS_Store
+node_modules/

@@ -1,0 +1,137 @@
+<!--
+  Contact form embed snippet: paste this whole block where the form should appear.
+  1. data-endpoint: your Apps Script web app URL (ends in /exec).
+  2. source: a label for the website this copy lives on (e.g. site-a on one site, site-b on the other).
+  Optional: change the button colour with style="--fdf-accent: #0f766e" on the <form>.
+-->
+<form class="fdf" data-fdf data-endpoint="https://script.google.com/macros/s/AKfycbwj6TyER1DYLIZ8pv-8hLov6aGQtC_u92KN0YsFQrb1GJq43aBa9Ldq0XmeNh8RqUaSsg/exec" novalidate>
+  <input type="hidden" name="source" value="site-a">
+  <div class="fdf-hp" aria-hidden="true">
+    <label>Leave this field empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+  </div>
+  <div class="fdf-row">
+    <label class="fdf-field">
+      <span class="fdf-label">Name <span class="fdf-req" aria-hidden="true">*</span></span>
+      <input type="text" name="name" autocomplete="name" maxlength="100" required>
+    </label>
+    <label class="fdf-field">
+      <span class="fdf-label">Email <span class="fdf-req" aria-hidden="true">*</span></span>
+      <input type="email" name="email" autocomplete="email" maxlength="254" required>
+    </label>
+  </div>
+  <label class="fdf-field">
+    <span class="fdf-label">Company <span class="fdf-opt">(optional)</span></span>
+    <input type="text" name="company" autocomplete="organization" maxlength="100">
+  </label>
+  <label class="fdf-field">
+    <span class="fdf-label">Message <span class="fdf-req" aria-hidden="true">*</span></span>
+    <textarea name="message" rows="4" maxlength="5000" required></textarea>
+  </label>
+  <button type="submit" class="fdf-button">Send message</button>
+  <p class="fdf-status" role="status" aria-live="polite"></p>
+</form>
+
+<style>
+  .fdf { --fdf-accent: #3b5bdb; --fdf-radius: 10px; box-sizing: border-box; width: 100%; max-width: 560px;
+         font-family: inherit; font-size: 15px; line-height: 1.5; color: #1f2937; text-align: left; }
+  .fdf *, .fdf *::before, .fdf *::after { box-sizing: inherit; }
+  .fdf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .fdf-field { display: block; margin: 0 0 14px; }
+  .fdf-label { display: block; margin: 0 0 6px; font-size: 13.5px; font-weight: 600; color: #1f2937; }
+  .fdf-req { color: #c2410c; }
+  .fdf-opt { font-weight: 400; color: #6b7280; }
+  .fdf input, .fdf textarea { display: block; width: 100%; margin: 0; padding: 10px 12px; font: inherit;
+         color: inherit; background: #fff; border: 1px solid #d1d5db; border-radius: var(--fdf-radius);
+         box-shadow: none; transition: border-color .15s, box-shadow .15s; }
+  .fdf textarea { min-height: 112px; resize: vertical; }
+  .fdf input:focus, .fdf textarea:focus { outline: none; border-color: var(--fdf-accent);
+         box-shadow: 0 0 0 3px color-mix(in srgb, var(--fdf-accent) 22%, transparent); }
+  .fdf [aria-invalid="true"] { border-color: #dc2626; }
+  .fdf-button { display: block; width: 100%; margin: 4px 0 0; padding: 11px 18px; font: inherit; font-weight: 600;
+         color: #fff; background: var(--fdf-accent); border: 0; border-radius: var(--fdf-radius); cursor: pointer;
+         transition: filter .15s, opacity .15s; }
+  .fdf-button:hover { filter: brightness(1.08); }
+  .fdf-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--fdf-accent) 40%, transparent); outline-offset: 2px; }
+  .fdf-button:disabled { opacity: .7; cursor: progress; }
+  .fdf-status { margin: 12px 0 0; padding: 10px 12px; font-size: 14px; border: 1px solid transparent; border-radius: 8px; }
+  .fdf-status:empty { margin: 0; padding: 0; border: 0; }
+  .fdf-status--success { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+  .fdf-status--error { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
+  .fdf-hp { position: absolute !important; left: -10000px !important; width: 1px; height: 1px; overflow: hidden; }
+  @media (max-width: 520px) { .fdf-row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  (function () {
+    var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var LABELS = { name: 'your name', email: 'your email', message: 'a message' };
+
+    function setStatus(form, kind, text) {
+      var status = form.querySelector('.fdf-status');
+      status.className = 'fdf-status' + (kind ? ' fdf-status--' + kind : '');
+      status.textContent = text;
+    }
+
+    function validate(form) {
+      var firstInvalid = null;
+      var message = '';
+      ['name', 'email', 'message'].forEach(function (name) {
+        var field = form.elements[name];
+        var value = field.value.trim();
+        var problem = !value ? 'Please enter ' + LABELS[name] + '.'
+          : name === 'email' && !EMAIL.test(value) ? 'Please enter a valid email address.' : '';
+        field.setAttribute('aria-invalid', problem ? 'true' : 'false');
+        if (problem && !firstInvalid) { firstInvalid = field; message = problem; }
+      });
+      if (firstInvalid) { firstInvalid.focus(); }
+      return message;
+    }
+
+    function init(form) {
+      if (form.getAttribute('data-fdf-ready')) { return; } // snippet pasted twice on one page
+      form.setAttribute('data-fdf-ready', '1');
+      var button = form.querySelector('.fdf-button');
+      var idleLabel = button.textContent;
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var problem = validate(form);
+        if (problem) { setStatus(form, 'error', problem); return; }
+
+        button.disabled = true;
+        button.textContent = 'Sending…';
+        form.setAttribute('aria-busy', 'true');
+        setStatus(form, '', '');
+        var controller = window.AbortController ? new AbortController() : null;
+        var timer = controller && setTimeout(function () { controller.abort(); }, 20000);
+
+        // URL-encoded body and no custom headers: a "simple" cross-origin request, no preflight.
+        fetch(form.getAttribute('data-endpoint'), {
+          method: 'POST',
+          body: new URLSearchParams(new FormData(form)),
+          signal: controller ? controller.signal : undefined
+        })
+          .then(function (response) { return response.json(); })
+          .then(function (data) {
+            if (data && data.ok) {
+              form.reset();
+              setStatus(form, 'success', 'Thank you! Your message has been sent.');
+            } else {
+              setStatus(form, 'error', (data && data.error) || 'Something went wrong. Please try again.');
+            }
+          })
+          .catch(function () {
+            setStatus(form, 'error', 'Could not send your message. Please check your connection and try again.');
+          })
+          .then(function () {
+            clearTimeout(timer);
+            button.disabled = false;
+            button.textContent = idleLabel;
+            form.removeAttribute('aria-busy');
+          });
+      });
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('form[data-fdf]'), init);
+  })();
+</script>
